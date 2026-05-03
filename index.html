@@ -1,16 +1,17 @@
-تفضل الكود الكامل والمطول، تم تحديثه بأحدث بيانات Firebase التي أرسلتها في الصور
-(مشروع rug)، مع نظام الـ 90 مستوى، تسجيل الدخول، وحفظ التقدم السحابي. تم استخدام
-طريقة CDN (Modular SDK) كما ظهر في لقطة الشاشة عندك لضمان حل مشكلة المفتاح
-تماماً.
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام RUG الاحترافي - V13.0</title>
+    <title>نظام RUG الاحترافي - الإصدار السحابي النهائي V14.0</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- تحميل مكتبات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
     <style>
         :root {
             --primary-gold: #ffcc00;
@@ -37,7 +38,7 @@
             background-attachment: fixed;
         }
 
-        /* شاشة تسجيل الدخول */
+        /* شاشة تسجيل الدخول الاحترافية */
         #auth-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -46,7 +47,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
         }
 
         .auth-container {
@@ -56,59 +57,62 @@
             background: var(--card-bg);
             border-radius: 30px;
             border: 2px solid var(--primary-gold);
-            box-shadow: 0 0 60px rgba(255, 204, 0, 0.3);
+            box-shadow: 0 0 70px rgba(255, 204, 0, 0.3);
             text-align: center;
         }
 
         .auth-input {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 18px;
+            margin: 12px 0;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
+            border-radius: 15px;
             color: white;
             font-size: 1rem;
             outline: none;
             text-align: center;
+            transition: 0.3s;
         }
+
+        .auth-input:focus { border-color: var(--neon-blue); background: rgba(255,255,255,0.08); }
 
         .auth-btn {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             margin-top: 20px;
             background: linear-gradient(45deg, var(--primary-gold), var(--secondary-gold));
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-weight: 900;
             cursor: pointer;
             transition: var(--transition);
             color: #000;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
 
-        .auth-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--primary-gold); }
+        .auth-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--primary-gold); }
 
         /* واجهة اللعبة الاحترافية */
         header {
-            padding: 30px;
+            padding: 40px;
             text-align: center;
             background: linear-gradient(to bottom, #000, transparent);
         }
 
         .main-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: clamp(1.5rem, 5vw, 3rem);
+            font-size: clamp(1.8rem, 6vw, 3.5rem);
             background: linear-gradient(45deg, var(--primary-gold), #fff, var(--neon-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 35px rgba(255, 204, 0, 0.5);
+            text-shadow: 0 0 40px rgba(255, 204, 0, 0.5);
         }
 
         .stats-bar {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 20px;
             max-width: 1200px;
             margin: 20px auto;
             padding: 0 20px;
@@ -118,85 +122,88 @@
 
         .stat-box {
             background: var(--card-bg);
-            padding: 15px;
-            border-radius: 20px;
+            padding: 20px;
+            border-radius: 25px;
             border: 1px solid rgba(255,255,255,0.05);
             text-align: center;
-            border-bottom: 4px solid var(--primary-gold);
+            border-bottom: 5px solid var(--primary-gold);
         }
 
-        .stat-val { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--neon-blue); }
+        .stat-label { font-size: 0.9rem; color: var(--secondary-gold); margin-bottom: 5px; display: block; }
+        .stat-val { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: var(--neon-blue); }
 
         .game-main {
-            max-width: 900px;
-            margin: 0 auto 50px;
+            max-width: 1000px;
+            margin: 0 auto 60px;
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 40px;
+            padding: 30px;
+            border-radius: 50px;
             border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8);
         }
 
         .img-viewport {
             width: 100%;
-            height: clamp(250px, 50vh, 450px);
-            border-radius: 25px;
+            height: clamp(300px, 55vh, 550px);
+            border-radius: 35px;
             overflow: hidden;
-            border: 5px solid #1a1a1a;
+            border: 6px solid #1a1a1e;
             position: relative;
             background: #000;
         }
 
-        #active-img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; opacity: 0; }
+        #active-img { width: 100%; height: 100%; object-fit: cover; transition: 0.7s ease; opacity: 0; }
 
         .blur-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            backdrop-filter: blur(0px); transition: 0.6s; pointer-events: none;
+            backdrop-filter: blur(0px); transition: 0.7s; pointer-events: none;
         }
 
         .choices-grid {
             display: grid;
             grid-template-columns: repeat(1, 1fr);
-            gap: 15px;
-            margin-top: 30px;
+            gap: 20px;
+            margin-top: 40px;
         }
 
-        @media (min-width: 480px) { .choices-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 500px) { .choices-grid { grid-template-columns: repeat(2, 1fr); } }
 
         .btn-choice {
-            padding: 22px;
-            background: rgba(255,255,255,0.03);
-            border: 2px solid rgba(255,255,255,0.12);
-            border-radius: 18px;
+            padding: 25px;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
             color: white;
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.3rem;
+            font-weight: 800;
             cursor: pointer;
             transition: var(--transition);
         }
 
-        .btn-choice:hover { border-color: var(--primary-gold); transform: translateY(-5px); background: rgba(255,204,0,0.05); }
-        .btn-choice.correct { background: var(--success) !important; color: #000; border-color: var(--success); }
-        .btn-choice.wrong { background: var(--error) !important; border-color: var(--error); }
+        .btn-choice:hover { border-color: var(--primary-gold); transform: translateY(-8px); background: rgba(255,204,0,0.1); }
+        .btn-choice.correct { background: var(--success) !important; color: #000; border-color: var(--success); box-shadow: 0 0 30px var(--success); }
+        .btn-choice.wrong { background: var(--error) !important; border-color: var(--error); box-shadow: 0 0 30px var(--error); }
 
         .map-btn {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
-            padding: 18px 35px;
+            bottom: 30px;
+            left: 30px;
+            padding: 20px 40px;
             background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
             border: none;
-            border-radius: 50px;
+            border-radius: 60px;
             color: white;
             font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
             z-index: 100;
+            font-size: 1.2rem;
         }
 
         #progress-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96);
+            background: rgba(0,0,0,0.98);
             z-index: 2000;
             display: none;
             justify-content: center;
@@ -204,28 +211,31 @@
         }
 
         .modal-content {
-            width: 95%; max-width: 850px; height: 85%;
+            width: 95%; max-width: 900px; height: 85%;
             background: var(--card-bg);
-            border-radius: 35px; padding: 35px;
+            border-radius: 40px; padding: 40px;
             overflow-y: auto; border: 2px solid var(--neon-blue);
         }
 
         .level-node-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
-            gap: 12px; margin-top: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 15px; margin-top: 30px;
         }
 
         .node {
-            aspect-ratio: 1; background: #1a1a1a;
-            border-radius: 12px; display: flex;
+            aspect-ratio: 1; background: #151518;
+            border-radius: 15px; display: flex;
             justify-content: center; align-items: center;
             font-weight: bold; font-family: 'Orbitron';
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: 0.3s;
         }
 
         .node.completed { background: var(--success); color: #000; border-color: var(--success); }
-        .node.current { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
+        .node.current { background: var(--neon-blue); color: #000; box-shadow: 0 0 25px var(--neon-blue); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         .overlay-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
@@ -239,25 +249,25 @@
 
     <div id="auth-screen">
         <div class="auth-container">
-            <h2 class="main-title" style="font-size: 2.2rem; margin-bottom: 25px;">دخول النظام</h2>
+            <h2 class="main-title" style="font-size: 2.5rem; margin-bottom: 30px;">دخول النظام</h2>
             <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني">
             <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور">
-            <button class="auth-btn" id="btn-login">تسجيل الدخول</button>
-            <button class="auth-btn" id="btn-signup" style="background: transparent; border: 1px solid var(--primary-gold); color: var(--primary-gold); margin-top: 12px;">فتح حساب جديد</button>
-            <p id="auth-error" style="color: var(--error); margin-top: 18px; font-size: 0.95rem; font-weight: bold;"></p>
+            <button class="auth-btn" onclick="handleAuth('login')">تسجيل الدخول</button>
+            <button class="auth-btn" onclick="handleAuth('signup')" style="background: transparent; border: 1px solid var(--primary-gold); color: var(--primary-gold); margin-top: 15px;">إنشاء حساب جديد</button>
+            <p id="auth-error" style="color: var(--error); margin-top: 20px; font-size: 1rem; font-weight: bold; line-height: 1.5;"></p>
         </div>
     </div>
 
     <header>
-        <h1 class="main-title">تحدي الـ 90 مستوى السحابي</h1>
-        <div style="margin-top: 12px; color: var(--secondary-gold); font-weight: bold;" id="display-user">جاري تحميل البيانات...</div>
+        <h1 class="main-title">نظام الـ 90 مستوى السحابي</h1>
+        <div style="margin-top: 15px; color: var(--secondary-gold); font-weight: bold; letter-spacing: 1px;" id="display-user">جاري التحقق...</div>
     </header>
 
     <div class="stats-bar">
         <div class="stat-box"><span class="stat-label">المستوى الحالي</span><div class="stat-val" id="ui-lvl">1</div></div>
         <div class="stat-box"><span class="stat-label">المراحل المنجزة</span><div class="stat-val" id="ui-prog">0/90</div></div>
         <div class="stat-box"><span class="stat-label">إجمالي النقاط</span><div class="stat-val" id="ui-pts">0</div></div>
-        <div class="stat-box"><button id="btn-logout" style="background: var(--error); border: none; color: #fff; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%;">خروج آمن</button></div>
+        <div class="stat-box"><button onclick="firebase.auth().signOut()" style="background: var(--error); border: none; color: #fff; padding: 15px; border-radius: 15px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem;">خروج آمن</button></div>
     </div>
 
     <main class="game-main">
@@ -268,27 +278,22 @@
         <div class="choices-grid" id="choices-box"></div>
     </main>
 
-    <button class="map-btn" id="btn-open-map">خريطة الإنجازات 🗺️</button>
+    <button class="map-btn" onclick="toggleProgressMap(true)">خريطة الـ 90 مستوى 🗺️</button>
 
     <div id="progress-modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 class="main-title" style="font-size: 1.7rem;">مسار الـ 90 مستوى</h2>
-                <button id="btn-close-map" style="background: none; border: none; color: white; font-size: 2.8rem; cursor: pointer;">&times;</button>
+                <h2 class="main-title" style="font-size: 1.8rem;">مسار التقدم الاحترافي</h2>
+                <button onclick="toggleProgressMap(false)" style="background: none; border: none; color: white; font-size: 3rem; cursor: pointer;">&times;</button>
             </div>
             <div class="level-node-grid" id="map-node-container"></div>
         </div>
     </div>
 
-    <script type="module">
-        // استيراد Firebase باستخدام CDN كما في لقطة الشاشة
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js";
-
-        // إعدادات مشروع rug الدقيقة من لقطة الشاشة
+    <script>
+        // إعدادات Firebase الخاصة بمشروع RUG - تم تحديثها بدقة من صورتك الأخيرة
         const firebaseConfig = {
-            apiKey: "AIzaSyAc6n3o8iYY51IKGtQ90-zdDJFmwx0RgrM",
+            apiKey: "AIzaSyAc6n3o8iYY51IKGtQ90-zdDJfmwx0RgrM",
             authDomain: "yoyo020118.firebaseapp.com",
             databaseURL: "https://yoyo020118-default-rtdb.firebaseio.com",
             projectId: "yoyo020118",
@@ -298,65 +303,64 @@
             measurementId: "G-RM13QTMF8B"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
 
         let userData = { level: 1, score: 0, completed: 0 };
         const maxLevels = 90;
         const categories = [
-            { n: "تكنولوجيا", k: "tech,ai" }, { n: "مدن", k: "city,skyscraper" },
-            { n: "غابات", k: "jungle,woods" }, { n: "جبال", k: "mountain,snow" },
-            { n: "فضاء", k: "galaxy,star" }, { n: "سيارات", k: "racing,car" },
-            { n: "بحار", k: "underwater,fish" }, { n: "حيوانات", k: "wildlife,lion" }
+            { n: "تكنولوجيا", k: "robotics,coding" }, { n: "مدن", k: "skyscrapers,urban" },
+            { n: "غابات", k: "rainforest,wild" }, { n: "جبال", k: "summit,glacier" },
+            { n: "فضاء", k: "nebula,astronaut" }, { n: "سيارات", k: "drift,racing" },
+            { n: "بحار", k: "coral,ocean" }, { n: "حيوانات", k: "predator,wild" }
         ];
 
-        // مراقبة حالة الجلسة
-        onAuthStateChanged(auth, (user) => {
+        // مراقبة حالة اللاعب
+        auth.onAuthStateChanged(user => {
             document.getElementById('overlay-loader').style.display = 'none';
             if (user) {
                 document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('display-user').innerText = `اللاعب: ${user.email}`;
+                document.getElementById('display-user').innerText = `المستخدم النشط: ${user.email}`;
                 syncData(user.uid);
             } else {
                 document.getElementById('auth-screen').style.display = 'flex';
-                document.getElementById('display-user').innerText = "بانتظار الدخول...";
+                document.getElementById('display-user').innerText = "بانتظار تسجيل الدخول...";
             }
         });
 
-        async function handleAuthAction(type) {
+        async function handleAuth(type) {
             const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             const err = document.getElementById('auth-error');
             
             if(!email || !pass) { err.innerText = "يرجى تعبئة كافة الحقول"; return; }
-            err.innerText = "جاري الاتصال بالسحابة...";
+            err.innerText = "جاري معالجة الطلب...";
 
             try {
-                if (type === 'signup') await createUserWithEmailAndPassword(auth, email, pass);
-                else await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) { err.innerText = "خطأ: " + e.message; }
+                if (type === 'signup') await auth.createUserWithEmailAndPassword(email, pass);
+                else await auth.signInWithEmailAndPassword(email, pass);
+            } catch (e) { 
+                err.innerText = "تنبيه: " + e.message; 
+            }
         }
 
         function syncData(uid) {
-            const userRef = ref(db, 'users/' + uid);
-            onValue(userRef, (snap) => {
-                if (snap.exists()) {
-                    userData = snap.val();
-                } else {
-                    saveToCloud();
-                }
+            db.ref('users/' + uid).on('value', snap => {
+                if (snap.exists()) userData = snap.val();
+                else saveCloud();
                 updateUI();
-                loadLevel();
+                renderLevel();
             });
         }
 
-        function saveToCloud() {
+        function saveCloud() {
             const user = auth.currentUser;
-            if (user) set(ref(db, 'users/' + user.uid), userData);
+            if (user) db.ref('users/' + user.uid).update(userData);
         }
 
-        function loadLevel() {
+        function renderLevel() {
             const current = categories[(userData.level - 1) % categories.length];
             const img = document.getElementById('active-img');
             const box = document.getElementById('choices-box');
@@ -365,8 +369,9 @@
             img.src = `https://loremflickr.com/800/600/${current.k}?lock=${userData.level}`;
             img.onload = () => img.style.opacity = '1';
 
-            let blurVal = (userData.level / maxLevels) * 15;
-            document.getElementById('active-blur').style.backdropFilter = `blur(${blurVal}px)`;
+            // تزداد الصعوبة (التغبيش) مع كل مستوى
+            let blurIntensity = (userData.level / maxLevels) * 16;
+            document.getElementById('active-blur').style.backdropFilter = `blur(${blurIntensity}px)`;
 
             box.innerHTML = '';
             let opts = [current.n];
@@ -381,14 +386,17 @@
                 b.onclick = () => {
                     if(o === current.n) {
                         b.classList.add('correct');
-                        userData.score += (userData.level * 20);
+                        userData.score += (userData.level * 30);
                         userData.completed = Math.max(userData.completed, userData.level);
                         userData.level++;
-                        if(userData.level > maxLevels) userData.level = 1;
-                        setTimeout(saveToCloud, 600);
+                        if(userData.level > maxLevels) {
+                            alert("أسطورة! لقد ختمت الـ 90 مستوى!");
+                            userData.level = 1;
+                        }
+                        setTimeout(saveCloud, 700);
                     } else {
                         b.classList.add('wrong');
-                        userData.score = Math.max(0, userData.score - 5);
+                        userData.score = Math.max(0, userData.score - 15);
                         setTimeout(() => b.classList.remove('wrong'), 500);
                     }
                 };
@@ -402,7 +410,7 @@
             document.getElementById('ui-prog').innerText = `${userData.completed}/${maxLevels}`;
         }
 
-        function toggleMap(show) {
+        function toggleProgressMap(show) {
             const modal = document.getElementById('progress-modal');
             modal.style.display = show ? 'flex' : 'none';
             if (show) {
@@ -418,14 +426,6 @@
                 }
             }
         }
-
-        // ربط الأحداث بالأزرار
-        document.getElementById('btn-login').onclick = () => handleAuthAction('login');
-        document.getElementById('btn-signup').onclick = () => handleAuthAction('signup');
-        document.getElementById('btn-logout').onclick = () => signOut(auth);
-        document.getElementById('btn-open-map').onclick = () => toggleMap(true);
-        document.getElementById('btn-close-map').onclick = () => toggleMap(false);
-
     </script>
 </body>
 </html>
