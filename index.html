@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الألعاب العالمي الاحترافي - الإصدار السحابي</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Firebase App & Services -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary-gold: #ffcc00;
+            --secondary-gold: #d4af37;
+            --dark-bg: #050506;
+            --card-bg: rgba(15, 15, 20, 0.98);
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --success: #00ff88;
+            --error: #ff3e3e;
+            --text: #ffffff;
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 5% 5%, rgba(188, 19, 254, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 95% 95%, rgba(0, 242, 255, 0.15) 0%, transparent 35%);
+            background-attachment: fixed;
+        }
+
+        /* شاشة تسجيل الدخول */
+        #auth-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(20px);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            border: 2px solid var(--primary-gold);
+            box-shadow: 0 0 50px rgba(255, 204, 0, 0.2);
+            text-align: center;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(45deg, var(--primary-gold), var(--secondary-gold));
+            border: none;
+            border-radius: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        /* واجهة اللعبة */
+        header {
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(to bottom, #000, transparent);
+        }
+
+        .main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(45deg, var(--primary-gold), #fff, var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .stat-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            border-bottom: 4px solid var(--primary-gold);
+        }
+
+        .stat-val { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; color: var(--neon-blue); }
+
+        .game-main {
+            max-width: 900px;
+            margin: 0 auto 50px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .img-viewport {
+            width: 100%;
+            height: 450px;
+            border-radius: 25px;
+            overflow: hidden;
+            border: 5px solid #1a1a1a;
+            position: relative;
+            background: #000;
+        }
+
+        #active-img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+
+        .blur-effect {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            backdrop-filter: blur(0px); transition: 0.5s; pointer-events: none;
+        }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-choice {
+            padding: 25px;
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-choice:hover { border-color: var(--primary-gold); transform: translateY(-5px); }
+        .btn-choice.correct { background: var(--success) !important; color: #000; }
+        .btn-choice.wrong { background: var(--error) !important; }
+
+        /* زر خريطة التقدم المطور */
+        .progress-map-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 20px 40px;
+            background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            font-size: 1.1rem;
+        }
+
+        /* نافذة التقدم */
+        #progress-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 40px;
+            overflow-y: auto;
+            border: 2px solid var(--neon-blue);
+        }
+
+        .level-grid-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .map-node {
+            aspect-ratio: 1;
+            background: #222;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-family: 'Orbitron';
+        }
+
+        .map-node.completed { background: var(--success); color: #000; box-shadow: 0 0 10px var(--success); }
+        .map-node.current { background: var(--neon-blue); color: #000; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+    </style>
+</head>
+<body>
+
+    <!-- شاشة التحميل -->
+    <div id="loading-overlay" class="loading-overlay">
+        <h1 class="main-title">جاري تهيئة النظام...</h1>
+    </div>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="auth-screen">
+        <div class="auth-container">
+            <h2 class="main-title" style="font-size: 2rem; margin-bottom: 20px;">تسجيل الدخول</h2>
+            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني">
+            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور">
+            <button class="auth-btn" onclick="handleAuth('login')">دخول</button>
+            <button class="auth-btn" onclick="handleAuth('signup')" style="background: transparent; border: 1px solid var(--primary-gold); color: var(--primary-gold); margin-top: 10px;">إنشاء حساب جديد</button>
+            <p id="auth-error" style="color: var(--error); margin-top: 15px; font-size: 0.9rem;"></p>
+        </div>
+    </div>
+
+    <header>
+        <h1 class="main-title">تحدي الـ 90 مستوى</h1>
+        <div style="margin-top: 10px; color: var(--secondary-gold)" id="user-display">مرحباً بك في النظام</div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat-box"><span class="stat-label">المستوى</span><div class="stat-val" id="ui-level">1</div></div>
+        <div class="stat-box"><span class="stat-label">المنجز</span><div class="stat-val" id="ui-progress-count">0/90</div></div>
+        <div class="stat-box"><span class="stat-label">النقاط</span><div class="stat-val" id="ui-score">0</div></div>
+        <div class="stat-box"><button onclick="firebase.auth().signOut()" style="background: none; border: 1px solid var(--error); color: var(--error); padding: 5px 10px; border-radius: 5px; cursor: pointer;">خروج</button></div>
+    </div>
+
+    <main class="game-main">
+        <div class="img-viewport">
+            <img src="" id="active-img">
+            <div class="blur-effect" id="active-blur"></div>
+        </div>
+        <div class="choices-grid" id="choices-box"></div>
+    </main>
+
+    <button class="progress-map-btn" onclick="toggleMap(true)">عرض خريطة التقدم 🗺️</button>
+
+    <div id="progress-modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="main-title" style="font-size: 1.5rem;">مسيرتك الاحترافية</h2>
+                <button onclick="toggleMap(false)" style="background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="level-grid-map" id="map-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // تكوين Firebase من الصورة التي أرسلتها
+        const firebaseConfig = {
+            apiKey: "AIzaSyAc6n3o8iYY51IKGtQ90-zdDJfmwx0RgrM",
+            authDomain: "yoyo020118.firebaseapp.com",
+            databaseURL: "https://yoyo020118-default-rtdb.firebaseio.com",
+            projectId: "yoyo020118",
+            storageBucket: "yoyo020118.firebasestorage.app",
+            messagingSenderId: "285530131606",
+            appId: "1:285530131606:web:94a5acb5b981c0002686b7",
+            measurementId: "G-9M8172RKV3"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let userData = { level: 1, score: 0, completed: 0 };
+        const totalLevels = 90;
+        const pool = [
+            { n: "تكنولوجيا", k: "technology,coding" },
+            { n: "مدن", k: "city,skyscraper" },
+            { n: "غابات", k: "forest,nature" },
+            { n: "جبال", k: "mountain,snow" },
+            { n: "فضاء", k: "galaxy,planet" },
+            { n: "سيارات", k: "car,race" },
+            { n: "بحار", k: "ocean,fish" },
+            { n: "حيوانات", k: "lion,wild" }
+        ];
+
+        // مراقبة حالة المستخدم
+        auth.onAuthStateChanged(user => {
+            document.getElementById('loading-overlay').style.display = 'none';
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('user-display').innerText = `المستخدم: ${user.email}`;
+                loadUserData(user.uid);
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        });
+
+        async function handleAuth(type) {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            const errorEl = document.getElementById('auth-error');
+            try {
+                if (type === 'signup') await auth.createUserWithEmailAndPassword(email, pass);
+                else await auth.signInWithEmailAndPassword(email, pass);
+            } catch (e) { errorEl.innerText = "خطأ: " + e.message; }
+        }
+
+        function loadUserData(uid) {
+            db.ref('users/' + uid).on('value', snap => {
+                if (snap.exists()) {
+                    userData = snap.val();
+                } else {
+                    saveProgress(); // إنشاء سجل جديد
+                }
+                updateUI();
+                renderLevel();
+            });
+        }
+
+        function saveProgress() {
+            const user = auth.currentUser;
+            if (user) {
+                db.ref('users/' + user.uid).set(userData);
+            }
+        }
+
+        function renderLevel() {
+            const idx = (userData.level - 1) % pool.length;
+            const current = pool[idx];
+            const img = document.getElementById('active-img');
+            const choicesBox = document.getElementById('choices-box');
+
+            img.src = `https://loremflickr.com/800/600/${current.k}?lock=${userData.level}`;
+            
+            let blurVal = (userData.level / totalLevels) * 15;
+            document.getElementById('active-blur').style.backdropFilter = `blur(${blurVal}px)`;
+
+            choicesBox.innerHTML = '';
+            let options = [current.n];
+            while(options.length < 4) {
+                let r = pool[Math.floor(Math.random()*pool.length)].n;
+                if(!options.includes(r)) options.push(r);
+            }
+            options.sort(() => Math.random() - 0.5).forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-choice';
+                btn.innerText = opt;
+                btn.onclick = () => check(opt, current.n, btn);
+                choicesBox.appendChild(btn);
+            });
+        }
+
+        function check(sel, cor, btn) {
+            if (sel === cor) {
+                btn.classList.add('correct');
+                userData.score += (userData.level * 10);
+                userData.completed = userData.level;
+                userData.level++;
+                if(userData.level > totalLevels) userData.level = 1;
+                setTimeout(() => {
+                    saveProgress();
+                }, 600);
+            } else {
+                btn.classList.add('wrong');
+                setTimeout(() => btn.classList.remove('wrong'), 500);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('ui-level').innerText = userData.level;
+            document.getElementById('ui-score').innerText = userData.score.toLocaleString();
+            document.getElementById('ui-progress-count').innerText = `${userData.completed}/${totalLevels}`;
+        }
+
+        function toggleMap(show) {
+            const modal = document.getElementById('progress-modal');
+            modal.style.display = show ? 'flex' : 'none';
+            if (show) {
+                const grid = document.getElementById('map-grid');
+                grid.innerHTML = '';
+                for (let i = 1; i <= totalLevels; i++) {
+                    const node = document.createElement('div');
+                    node.className = 'map-node';
+                    if (i <= userData.completed) node.classList.add('completed');
+                    if (i === userData.level) node.classList.add('current');
+                    node.innerText = i;
+                    grid.appendChild(node);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
